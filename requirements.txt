@@ -1,3 +1,14 @@
 psycopg2-binary
 sqlalchemy
 chromadb
+bcrypt
+langchain-community
+langchain
+langgraph
+pypdf
+sentence-transformers
+langchain-chroma
+redis
+python-jose
+fastapi
+uvicorn
