@@ -1,2 +1,3 @@
-policy_docs/
+data/
 hr_chatbot_design.md
+__pycache__

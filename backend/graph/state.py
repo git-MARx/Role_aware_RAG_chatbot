@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from typing_extensions import TypedDict
 
 
@@ -17,12 +17,14 @@ class GraphState(TypedDict):
     # ── Classifier output ──────────────────────────────────────────────────────
     category:   str                  # "personal" | "policy" | "chitchat" | "someone_else"
     query_type: str                  # "single" | "multi"
+    data_type:  str                  # "leave_by_type" | "total_leave" | "payslip" | None
+    target_name: str
 
     # ── Decomposer output (only when query_type = "multi") ────────────────────
     sub_queries: Optional[list[str]]
 
     # ── Tool outputs ───────────────────────────────────────────────────────────
-    sql_result:       Optional[str]
+    sql_result:       Optional[Dict]
     retrieved_chunks: Optional[list[dict]]
 
     # ── Final output ───────────────────────────────────────────────────────────

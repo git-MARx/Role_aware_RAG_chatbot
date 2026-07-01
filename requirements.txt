@@ -12,3 +12,5 @@ redis
 python-jose
 fastapi
 uvicorn
+langchain-google-genai
+python-dotenv
