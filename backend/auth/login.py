@@ -43,6 +43,7 @@ def login(data: LoginRequest):
         "role":       row.role,
         "department": row.department,
         "manager_id": row.manager_id,
+        "thread_id" : str(uuid.uuid4())
     }
 
     redis_client.setex(

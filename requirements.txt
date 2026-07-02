@@ -13,4 +13,6 @@ python-jose
 fastapi
 uvicorn
 langchain-google-genai
+langchain-groq
 python-dotenv
+aiofiles

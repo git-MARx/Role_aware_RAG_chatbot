@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Chatbot — Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 18px;
+    }
+
+    input:focus { border-color: #4f46e5; }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #4338ca; }
+    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .error {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>HR Chatbot</h1>
+    <p class="subtitle">Sign in with your employee credentials</p>
+
+    <label for="emp_id">Employee ID</label>
+    <input type="number" id="emp_id" placeholder="e.g. 5" />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="••••••••" />
+
+    <button id="login-btn" onclick="login()">Sign In</button>
+    <div class="error" id="error-msg"></div>
+  </div>
+
+  <script>
+    async function login() {
+      const emp_id  = parseInt(document.getElementById("emp_id").value);
+      const password = document.getElementById("password").value;
+      const btn      = document.getElementById("login-btn");
+      const errorDiv = document.getElementById("error-msg");
+
+      if (!emp_id || !password) {
+        showError("Please enter both Employee ID and password.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+      errorDiv.style.display = "none";
+
+      try {
+        const res = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emp_id, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.detail || "Login failed.");
+          return;
+        }
+
+        localStorage.setItem("session_token", data.session_token);
+        window.location.href = "/chat";
+      } catch (e) {
+        showError("Unable to reach the server. Please try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>

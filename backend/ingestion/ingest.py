@@ -4,6 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_chroma import Chroma
+from config.settings import EMBEDDING_MODEL
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 BASE_DIR         = Path(__file__).parent.parent.parent
@@ -11,7 +12,6 @@ POLICIES_DIR     = BASE_DIR / "data" / "policies"
 VECTOR_STORE_DIR = BASE_DIR / "data" / "vector_store"
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 COLLECTION_NAME = "hr_policies"
 CHUNK_SIZE      = 800
 CHUNK_OVERLAP   = 150

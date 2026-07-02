@@ -1,12 +1,13 @@
 from typing import Literal, Optional
 
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
 from backend.graph.state import GraphState
 from backend.repository.prompts import CLASSIFIER_SYSTEM_PROMPT
+from config.settings import LLM_MODEL
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ class Classification(BaseModel):
     target_name: Optional[str]
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGroq(model=LLM_MODEL)
 structured_llm = llm.with_structured_output(Classification)
 
 
