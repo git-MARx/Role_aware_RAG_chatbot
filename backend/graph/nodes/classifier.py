@@ -14,7 +14,6 @@ load_dotenv()
 
 class Classification(BaseModel):
     category:    Literal["personal", "policy", "chitchat", "someone_else"]
-    query_type:  Literal["single", "multi"]
     data_type:   Optional[Literal["leave_by_type", "total_leave", "payslip"]]
     target_name: Optional[str]
 
@@ -33,7 +32,6 @@ def classifier_node(state: GraphState) -> dict:
 
     return {
         "category":   result.category,
-        "query_type": result.query_type,
         "target_name":result.target_name,
         "data_type":  result.data_type
     }
@@ -42,25 +40,24 @@ def classifier_node(state: GraphState) -> dict:
 if __name__ == "__main__":
     test_queries = [
         "What is my PL leave balance?",
+        "am i eligible for maternity leave?",
         "What is the maternity leave policy?",
         "What is Rohan's attendance record?",
-        "What is my leave balance and what is the maternity leave policy?",
-        "show me my payslip"
+        "hi",
     ]
 
     for query in test_queries:
         mock_state: GraphState = {
             "emp_id": 1, "role": "employee", "manager_id": None,
             "department": "Engineering", "thread_id": "test-thread",
-            "original_query": query, "rewritten_query": '',
-            "category": "", "query_type": "",
-            "sub_queries": None, "sql_result": None,
-            "retrieved_chunks": None, "final_response": None,
+            "original_query": query, "rewritten_query": query,
+            "category": "", "query_type": "", "data_type": None,
+            "target_name": "", "sub_queries": None,
+            "retrieved_chunks": None, "sub_results": [], "final_response": None,
         }
         result = classifier_node(mock_state)
         print(f"Query      : {query}")
         print(f"Category   : {result['category']}")
-        print(f"Query type : {result['query_type']}")
         print(f"Targetname : {result['target_name']}")
         print(f"data_type  : {result['data_type']}")
         print("-" * 60)

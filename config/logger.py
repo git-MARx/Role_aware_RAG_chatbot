@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 import uuid
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
@@ -40,12 +41,13 @@ def log_request(
     thread_id: str,
     original_query: str,
     rewritten_query: str,
-    category: str,
     query_type: str,
-    data_type: str | None,
-    target_name: str,
+    sub_results: list,
     final_response: str,
 ):
+    sql_data     = [item["data"] for item in sub_results if item.get("type") == "sql"]
+    policy_count = sum(len(item["data"]) for item in sub_results if item.get("type") == "policy")
+
     _logger.info(json.dumps({
         "request_id":      str(uuid.uuid4()),
         "timestamp":       datetime.now().isoformat(),
@@ -54,10 +56,9 @@ def log_request(
         "thread_id":       thread_id,
         "original_query":  original_query,
         "rewritten_query": rewritten_query,
-        "category":        category,
         "query_type":      query_type,
-        "data_type":       data_type,
-        "target_name":     target_name,
+        "sql_data":        sql_data,
+        "policy_chunks":   policy_count,
         "final_response":  final_response,
     }))
 
@@ -76,4 +77,5 @@ def log_error(
         "thread_id":      thread_id,
         "original_query": original_query,
         "error":          str(error),
+        "traceback":      traceback.format_exc(),
     }))
