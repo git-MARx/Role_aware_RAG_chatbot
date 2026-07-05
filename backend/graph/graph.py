@@ -24,7 +24,7 @@ def route_after_decomposer(state: GraphState):
 def route_after_classifier(state: GraphState) -> str:
     category = state["category"]
     if category == "chitchat":
-        return "generator"
+        return "chitchat"
     if category == "policy":
         return "retrieval"
     return "sql_tool"

@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 import uuid
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
@@ -76,4 +77,5 @@ def log_error(
         "thread_id":      thread_id,
         "original_query": original_query,
         "error":          str(error),
+        "traceback":      traceback.format_exc(),
     }))

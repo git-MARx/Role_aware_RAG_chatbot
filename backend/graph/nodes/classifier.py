@@ -43,7 +43,7 @@ if __name__ == "__main__":
         "am i eligible for maternity leave?",
         "What is the maternity leave policy?",
         "What is Rohan's attendance record?",
-        "show me my payslip",
+        "hi",
     ]
 
     for query in test_queries:
