@@ -3,8 +3,6 @@ from typing import Optional
 from typing_extensions import Annotated, TypedDict
 
 
-def _last(a, b):
-    return b
 
 
 class GraphState(TypedDict):
@@ -24,9 +22,9 @@ class GraphState(TypedDict):
     sub_queries: Optional[list[str]]
 
     # ── Classifier output ─────────────────────────────────────────────────────
-    category:    Annotated[str,           _last]  # "personal" | "policy" | "chitchat" | "someone_else"
-    data_type:   Annotated[Optional[str], _last]  # "leave_by_type" | "total_leave" | "payslip" | None
-    target_name: Annotated[Optional[str], _last]
+    category:    str            # "personal" | "policy" | "chitchat" | "someone_else"
+    data_type:   Optional[str]  # "leave_by_type" | "total_leave" | "payslip" | None
+    target_name: Optional[str]
 
     # ── Intermediate retrieval (within a branch) ───────────────────────────────
     retrieved_chunks: Optional[list[dict]]
