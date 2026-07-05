@@ -1,5 +1,10 @@
-from typing import Optional, Dict
-from typing_extensions import TypedDict
+import operator
+from typing import Optional
+from typing_extensions import Annotated, TypedDict
+
+
+def _last(a, b):
+    return b
 
 
 class GraphState(TypedDict):
@@ -14,18 +19,20 @@ class GraphState(TypedDict):
     original_query:  str             # raw user input
     rewritten_query: str             # after query rewriter
 
-    # ── Classifier output ──────────────────────────────────────────────────────
-    category:   str                  # "personal" | "policy" | "chitchat" | "someone_else"
-    query_type: str                  # "single" | "multi"
-    data_type:  str                  # "leave_by_type" | "total_leave" | "payslip" | None
-    target_name: str
-
-    # ── Decomposer output (only when query_type = "multi") ────────────────────
+    # ── Decomposer output ─────────────────────────────────────────────────────
+    query_type:  str                 # "single" | "multi"
     sub_queries: Optional[list[str]]
 
-    # ── Tool outputs ───────────────────────────────────────────────────────────
-    sql_result:       Optional[Dict]
+    # ── Classifier output ─────────────────────────────────────────────────────
+    category:    Annotated[str,           _last]  # "personal" | "policy" | "chitchat" | "someone_else"
+    data_type:   Annotated[Optional[str], _last]  # "leave_by_type" | "total_leave" | "payslip" | None
+    target_name: Annotated[Optional[str], _last]
+
+    # ── Intermediate retrieval (within a branch) ───────────────────────────────
     retrieved_chunks: Optional[list[dict]]
 
-    # ── Final output ───────────────────────────────────────────────────────────
+    # ── Accumulated results across branches ───────────────────────────────────
+    sub_results: Annotated[list[dict], operator.add]
+
+    # ── Final output ──────────────────────────────────────────────────────────
     final_response: Optional[str]

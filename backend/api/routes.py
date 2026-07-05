@@ -29,8 +29,8 @@ def chat(request: ChatRequest, employee: dict = Depends(get_current_employee)):
         "data_type":       None,
         "target_name":     "",
         "sub_queries":     None,
-        "sql_result":      None,
         "retrieved_chunks": None,
+        "sub_results":     [],
         "final_response":  None,
     }
 
@@ -42,10 +42,8 @@ def chat(request: ChatRequest, employee: dict = Depends(get_current_employee)):
             thread_id=employee["thread_id"],
             original_query=request.message,
             rewritten_query=result.get("rewritten_query", ""),
-            category=result.get("category", ""),
             query_type=result.get("query_type", ""),
-            data_type=result.get("data_type"),
-            target_name=result.get("target_name", ""),
+            sub_results=result.get("sub_results", []),
             final_response=result.get("final_response", ""),
         )
 

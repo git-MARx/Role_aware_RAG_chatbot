@@ -1,0 +1,107 @@
+Query Rewriter Eval — 2026-07-03 00:13:25
+======================================================================
+
+[01] No history — leave balance
+  Original  : What is my leave balance?
+  Expected  : What is my leave balance?
+  Actual    : What is my leave balance?
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[02] No history — PL days
+  Original  : How many PL days do I have?
+  Expected  : How many PL days do I have?
+  Actual    : How many PL days do I have?
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[03] No history — payslip (should NOT expand)
+  Original  : payslip
+  Expected  : payslip
+  Actual    : payslip
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[04] No history — my payslip (should NOT expand)
+  Original  : my payslip
+  Expected  : my payslip
+  Actual    : my payslip
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[05] No history — policy query
+  Original  : What is the maternity leave policy?
+  Expected  : What is the maternity leave policy?
+  Actual    : What is the maternity leave policy?
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[06] Pronoun — his payslip (Rohan)
+  Original  : what about his payslip?
+  Expected  : What is Rohan's payslip?
+  Actual    : What about Rohan's payslip?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[07] Pronoun — it (maternity leave)
+  Original  : how long does it last?
+  Expected  : How long does maternity leave last?
+  Actual    : How long does maternity leave last?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[08] Pronoun — can I apply for it (PL)
+  Original  : can I apply for it now?
+  Expected  : Can I apply for PL now?
+  Actual    : can I apply for Privilege Leave now?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[09] Carryover — and GL? (after PL)
+  Original  : and GL?
+  Expected  : What is my GL balance?
+  Actual    : What is my GL balance?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[10] Carryover — and payslip? (after Kiran's leave)
+  Original  : and payslip?
+  Expected  : What is Kiran's payslip?
+  Actual    : What is Kiran's payslip?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[11] Carryover — what about food? (after travel reimbursement)
+  Original  : what about food?
+  Expected  : What is the food reimbursement policy?
+  Actual    : What about food reimbursement?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[12] Payslip — short query should stay minimal
+  Original  : payslip
+  Expected  : What is my payslip?
+  Actual    : What is my payslip?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[13] Payslip — mohan's payslip should not expand to policy
+  Original  : mohan's payslip
+  Expected  : What is Mohan's payslip?
+  Actual    : mohan's payslip
+  History   : 0 message(s)
+----------------------------------------------------------------------
+
+[14] Name carryover — kiran's after mohan
+  Original  : kiran's
+  Expected  : What is Kiran's leave balance?
+  Actual    : What is Kiran's leave balance?
+  History   : 2 message(s)
+----------------------------------------------------------------------
+
+[15] Name carryover — and sneha? after rohan's PL
+  Original  : and sneha?
+  Expected  : What is Sneha's PL balance?
+  Actual    : What is Sneha's PL balance?
+  History   : 2 message(s)
+----------------------------------------------------------------------
