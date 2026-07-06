@@ -1,4 +1,4 @@
-from backend.graph.state import GraphState
+from backend.graph.state import SubQueryState
 from backend.service.access_control import check_access
 from backend.repository.sql_queries import (
     get_total_leave_balance,
@@ -7,16 +7,23 @@ from backend.repository.sql_queries import (
 )
 
 
-def sql_tool_node(state: GraphState) -> dict:
+def sql_tool_node(state: SubQueryState) -> dict:
     emp_id      = state["emp_id"]
     role        = state["role"]
     category    = state["category"]
     data_type   = state["data_type"]
     target_name = state["target_name"]
-    query       = state["original_query"]
+    query       = state["original_sub_query"]
 
     def _result(data) -> dict:
-        return {"sub_results": [{"query": query, "type": "sql", "data": data}]}
+        return {"sub_results": [{
+            "query":       query,
+            "type":        "sql",
+            "category":    category,
+            "data_type":   data_type,
+            "target_name": target_name or None,
+            "data":        data,
+        }]}
 
     if category in ("personal", "someone_else") and data_type is None:
         return _result("I don't have access to this information yet.")
@@ -53,15 +60,14 @@ if __name__ == "__main__":
     priya = _get_emp_id_by_name("Priya Nair")
     meera = _get_emp_id_by_name("Meera Krishnan")
 
-    def make_state(emp_id, role, category, data_type, target_name="") -> GraphState:
+    def make_state(emp_id, role, category, data_type, target_name="") -> SubQueryState:
         return {
-            "emp_id": emp_id, "role": role, "department": "Engineering",
-            "manager_id": None, "thread_id": "test",
-            "original_query": "What is my leave balance?", "rewritten_query": "",
-            "category": category, "query_type": "single",
+            "emp_id": emp_id, "role": role, "manager_id": None,
+            "original_sub_query": "What is my leave balance?",
+            "category": category,
             "data_type": data_type, "target_name": target_name,
-            "sub_queries": None, "retrieved_chunks": None,
-            "sub_results": [], "final_response": None,
+            "retrieved_chunks": None,
+            "sub_results": [], 
         }
 
     cases = [

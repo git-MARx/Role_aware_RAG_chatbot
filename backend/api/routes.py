@@ -24,12 +24,8 @@ def chat(request: ChatRequest, employee: dict = Depends(get_current_employee)):
 
         "original_query":  request.message,
         "rewritten_query": "",
-        "category":        "",
         "query_type":      "",
-        "data_type":       None,
-        "target_name":     "",
         "sub_queries":     None,
-        "retrieved_chunks": None,
         "sub_results":     [],
         "final_response":  None,
     }

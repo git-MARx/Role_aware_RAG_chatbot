@@ -5,7 +5,7 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
-from backend.graph.state import GraphState
+from backend.graph.state import SubQueryState
 from backend.repository.prompts import GRADER_SYSTEM_PROMPT
 from config.settings import LLM_MODEL
 
@@ -20,8 +20,8 @@ llm = ChatGroq(model=LLM_MODEL)
 structured_llm = llm.with_structured_output(GraderOutput)
 
 
-def grader_node(state: GraphState) -> dict:
-    query  = state["original_query"]
+def grader_node(state: SubQueryState) -> dict:
+    query  = state["original_sub_query"]
     chunks = state["retrieved_chunks"] or []
 
     numbered = "\n\n".join(
@@ -38,7 +38,13 @@ def grader_node(state: GraphState) -> dict:
 
     graded_chunks = [chunks[i] for i, v in enumerate(result.grades) if v]
 
-    return {"sub_results": [{"query": query, "type": "policy", "data": graded_chunks}]}
+    return {"sub_results": [{
+        "query":           query,
+        "type":            "policy",
+        "retrieved_count": len(chunks),
+        "graded_count":    len(graded_chunks),
+        "data":            graded_chunks,
+    }]}
 
 
 if __name__ == "__main__":
@@ -49,15 +55,12 @@ if __name__ == "__main__":
         "What is the policy for working from home?",
     ]
 
-    def make_state(query: str) -> GraphState:
+    def make_state(query: str) -> SubQueryState:
         return {
             "emp_id": 1, "role": "employee", "manager_id": None,
-            "department": "Engineering", "thread_id": "test",
-            "original_query": query, "rewritten_query": query,
-            "category": "policy", "query_type": "single",
+            "original_sub_query": query, "category": "policy", 
             "data_type": None, "target_name": "",
-            "sub_queries": None, "retrieved_chunks": None,
-            "sub_results": [], "final_response": None,
+            "retrieved_chunks": None, "sub_results": [], 
         }
 
     for query in test_queries:

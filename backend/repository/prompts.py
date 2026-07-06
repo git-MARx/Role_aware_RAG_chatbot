@@ -32,12 +32,12 @@ Given a user query, decide if it contains a single intent or multiple independen
 - "single" : one clear question or request
 - "multi"  : two or more independent questions that can be answered separately
 
-If single, return sub_queries as null.
+If single, return sub_queries as-is.
 If multi, split the query into a list of self-contained sub-queries. Each sub-query must be fully standalone — include all necessary context (names, leave types, etc.) so it can be understood without the others.
 
 Examples:
   "What is my PL balance?"
-    → query_type: "single", sub_queries: null
+    → query_type: "single", sub_queries: ["What is my PL balance?"]
 
   "What is my leave balance and what is the maternity leave policy?"
     → query_type: "multi", sub_queries: ["What is my leave balance?", "What is the maternity leave policy?"]

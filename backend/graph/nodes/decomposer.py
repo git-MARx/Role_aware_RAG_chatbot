@@ -14,7 +14,7 @@ load_dotenv()
 
 class Decomposition(BaseModel):
     query_type:  Literal["single", "multi"]
-    sub_queries: Optional[list[str]]
+    sub_queries: list[str]
 
 
 llm = ChatGroq(model=LLM_MODEL)
@@ -48,9 +48,8 @@ if __name__ == "__main__":
             "emp_id": 1, "role": "employee", "manager_id": None,
             "department": "Engineering", "thread_id": "test-thread",
             "original_query": query, "rewritten_query": query,
-            "category": "", "query_type": "",
-            "sub_queries": None, "sub_results": [],
-            "retrieved_chunks": None, "final_response": None,
+            "query_type": "", "sub_queries": [],
+            "sub_results": [], "final_response": None,
         }
         result = decomposer_node(mock_state)
         print(f"Query      : {query}")

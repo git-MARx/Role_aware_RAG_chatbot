@@ -5,7 +5,7 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
-from backend.graph.state import GraphState
+from backend.graph.state import SubQueryState
 from backend.repository.prompts import CLASSIFIER_SYSTEM_PROMPT
 from config.settings import LLM_MODEL
 
@@ -22,10 +22,10 @@ llm = ChatGroq(model=LLM_MODEL)
 structured_llm = llm.with_structured_output(Classification)
 
 
-def classifier_node(state: GraphState) -> dict:
+def classifier_node(state: SubQueryState) -> dict:
     messages = [
         SystemMessage(content=CLASSIFIER_SYSTEM_PROMPT),
-        HumanMessage(content=state["rewritten_query"] if state["rewritten_query"] else state["original_query"]),
+        HumanMessage(content=state["original_sub_query"]),
     ]
 
     result: Classification = structured_llm.invoke(messages)
@@ -47,13 +47,10 @@ if __name__ == "__main__":
     ]
 
     for query in test_queries:
-        mock_state: GraphState = {
+        mock_state: SubQueryState = {
             "emp_id": 1, "role": "employee", "manager_id": None,
-            "department": "Engineering", "thread_id": "test-thread",
-            "original_query": query, "rewritten_query": query,
-            "category": "", "query_type": "", "data_type": None,
-            "target_name": "", "sub_queries": None,
-            "retrieved_chunks": None, "sub_results": [], "final_response": None,
+            "original_sub_query": query, "category": "", "data_type": None,
+            "target_name": "", "retrieved_chunks": None, "sub_results": [],
         }
         result = classifier_node(mock_state)
         print(f"Query      : {query}")
