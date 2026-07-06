@@ -45,8 +45,24 @@ def log_request(
     sub_results: list,
     final_response: str,
 ):
-    sql_data     = [item["data"] for item in sub_results if item.get("type") == "sql"]
-    policy_count = sum(len(item["data"]) for item in sub_results if item.get("type") == "policy")
+    sql_entries = [
+        {
+            "query":       item.get("query"),
+            "category":    item.get("category"),
+            "data_type":   item.get("data_type"),
+            "target_name": item.get("target_name"),
+            "data":        item.get("data"),
+        }
+        for item in sub_results if item.get("type") == "sql"
+    ]
+    policy_entries = [
+        {
+            "query":           item.get("query"),
+            "retrieved_count": item.get("retrieved_count"),
+            "graded_count":    item.get("graded_count"),
+        }
+        for item in sub_results if item.get("type") == "policy"
+    ]
 
     _logger.info(json.dumps({
         "request_id":      str(uuid.uuid4()),
@@ -57,8 +73,8 @@ def log_request(
         "original_query":  original_query,
         "rewritten_query": rewritten_query,
         "query_type":      query_type,
-        "sql_data":        sql_data,
-        "policy_chunks":   policy_count,
+        "sql_entries":     sql_entries,
+        "policy_entries":  policy_entries,
         "final_response":  final_response,
     }))
 

@@ -1,27 +1,34 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 
-from backend.graph.state import GraphState
+from backend.graph.state import GraphState, SubQueryState
 from backend.graph.nodes.query_rewriter import query_rewriter_node
 from backend.graph.nodes.decomposer import decomposer_node
 from backend.graph.nodes.classifier import classifier_node
 from backend.graph.nodes.retrieval_node import retrieval_node
 from backend.graph.nodes.grader import grader_node
 from backend.graph.nodes.generator import generator_node
-from backend.graph.nodes.sub_query_processor import sub_query_processor_node
 from backend.tools.sql_tool import sql_tool_node
 
 
 def route_after_decomposer(state: GraphState):
-    if state["query_type"] == "single":
-        return "classifier"
     return [
-        Send("sub_query_processor", {**state, "original_query": sub_query, "rewritten_query": sub_query})
+        Send("subgraph",{
+            "emp_id":         state["emp_id"],
+            "role":           state["role"],
+            "manager_id":     state["manager_id"],
+            "original_sub_query": sub_query,
+            "category":       "",
+            "data_type":      None,
+            "target_name":    None,
+            "retrieved_chunks": None,
+            "sub_results":    [],
+        })
         for sub_query in state["sub_queries"]
     ]
 
 
-def route_after_classifier(state: GraphState) -> str:
+def route_after_classifier(state: SubQueryState) -> str:
     category = state["category"]
     if category == "chitchat":
         return "chitchat"
@@ -30,40 +37,44 @@ def route_after_classifier(state: GraphState) -> str:
     return "sql_tool"
 
 
+subgraph = StateGraph(SubQueryState)
+
+subgraph.add_node("classifier",         classifier_node)
+subgraph.add_node("retrieval",          retrieval_node)
+subgraph.add_node("grader",             grader_node)
+subgraph.add_node("sql_tool",           sql_tool_node)
+
+subgraph.add_edge(START, "classifier")
+subgraph.add_conditional_edges("classifier", route_after_classifier, {"chitchat": END,
+                                                                      "retrieval": "retrieval",
+                                                                      "sql_tool":"sql_tool"})
+subgraph.add_edge("retrieval", "grader")
+subgraph.set_finish_point("grader")
+subgraph.set_finish_point("sql_tool")
+subgraph = subgraph.compile()
+# image =subgraph.get_graph().draw_png()
+
+# with open("subgraph.png","wb") as file:
+#     file.write(image)
+
 builder = StateGraph(GraphState)
 
 builder.add_node("query_rewriter",      query_rewriter_node)
 builder.add_node("decomposer",          decomposer_node)
-builder.add_node("classifier",          classifier_node)
-builder.add_node("sub_query_processor", sub_query_processor_node)
-builder.add_node("retrieval",           retrieval_node)
-builder.add_node("grader",              grader_node)
-builder.add_node("sql_tool",            sql_tool_node)
+builder.add_node("subgraph",            subgraph)
 builder.add_node("generator",           generator_node)
 
-builder.add_edge(START,            "query_rewriter")
-builder.add_edge("query_rewriter", "decomposer")
-
-builder.add_conditional_edges("decomposer", route_after_decomposer, ["classifier", "sub_query_processor"])
-
-builder.add_conditional_edges(
-    "classifier",
-    route_after_classifier,
-    {
-        "chitchat":  "generator",
-        "retrieval": "retrieval",
-        "sql_tool":  "sql_tool",
-    },
-)
-
-builder.add_edge("sub_query_processor", "generator")
-builder.add_edge("retrieval",           "grader")
-builder.add_edge("grader",              "generator")
-builder.add_edge("sql_tool",            "generator")
+builder.add_edge(START,                 "query_rewriter")
+builder.add_edge("query_rewriter",      "decomposer")
+builder.add_conditional_edges("decomposer", route_after_decomposer, ["subgraph"])
+builder.add_edge("subgraph",            "generator")
 builder.add_edge("generator",           END)
 
 graph = builder.compile()
+# image =graph.get_graph().draw_png()
 
+# with open("graph.png","wb") as file:
+#     file.write(image)
 
 if __name__ == "__main__":
     from config.settings import redis_client
@@ -73,13 +84,12 @@ if __name__ == "__main__":
 
     def make_state(query: str) -> GraphState:
         return {
-            "emp_id": 5, "role": "employee", "manager_id": 2,
-            "department": "Engineering", "thread_id": TEST_THREAD,
-            "original_query": query, "rewritten_query": "",
-            "category": "", "query_type": "", "data_type": None,
-            "target_name": "", "sub_queries": None,
-            "retrieved_chunks": None, "sub_results": [], "final_response": None,
-        }
+        "emp_id": 5, "role": "employee", "manager_id": 2,
+        "department": "Engineering", "thread_id": TEST_THREAD,
+        "original_query": query, "rewritten_query": "",
+        "query_type": "", "sub_queries": [],
+        "sub_results": [], "final_response": None,
+    }
 
     test_cases = [
         ("Chitchat", "Hello, how are you?"),

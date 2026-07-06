@@ -3,3 +3,4 @@ hr_chatbot_design.md
 __pycache__/
 logs/
 .vscode/
+.env
