@@ -33,6 +33,8 @@ def _build_context(sub_results: list[dict]) -> tuple[str, str]:
                 for c in item["data"]
             )
             sections.append(f"[{item['query']}]\n{excerpts}")
+        elif item["type"] == "other":
+            sections.append(f"[{item['query']}]\n{item['data']}")
     return "sql", "\n\n".join(sections)
 
 
@@ -75,6 +77,15 @@ if __name__ == "__main__":
             "sub_results": sub_results or [],
             "retrieved_chunks": None, "final_response": None,
         }
+
+    # ── Test 0: other class ───────────────────────────────────────────
+    result = generator_node(make_state(
+        query="What is capital of india?",
+        sub_results=[{"query": "What is capital of india?", "type": "other", "data": "This is not HR bot related query"}],
+    ))
+    print("Test 0: other class")
+    print(f"  {result['final_response']}")
+    print("-" * 60)
 
     # ── Test 1: SQL — single intent ───────────────────────────────────────────
     result = generator_node(make_state(

@@ -6,6 +6,7 @@ SESSION_TTL = 900  # 15 minutes in seconds (sliding)
 
 # ── LLM ───────────────────────────────────────────────────────────────────────
 LLM_MODEL       = "llama-3.3-70b-versatile"
+# LLM_MODEL       = "llama-3.1-8b-instant"
 EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 
 engine = create_engine(DB_URL)

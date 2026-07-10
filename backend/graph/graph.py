@@ -34,23 +34,34 @@ def route_after_classifier(state: SubQueryState) -> str:
         return "chitchat"
     if category == "policy":
         return "retrieval"
+    if category == "other":
+        return "other"
     return "sql_tool"
 
+def handle_other(state: SubQueryState) -> dict:
+    return {"sub_results": [{
+            "query":       state["original_sub_query"],
+            "type":        "other",
+            "data":        "This is not HR bot related query",
+            }]}
 
 subgraph = StateGraph(SubQueryState)
 
 subgraph.add_node("classifier",         classifier_node)
+subgraph.add_node("other",              handle_other)
 subgraph.add_node("retrieval",          retrieval_node)
 subgraph.add_node("grader",             grader_node)
 subgraph.add_node("sql_tool",           sql_tool_node)
 
 subgraph.add_edge(START, "classifier")
 subgraph.add_conditional_edges("classifier", route_after_classifier, {"chitchat": END,
+                                                                      "other":"other",
                                                                       "retrieval": "retrieval",
                                                                       "sql_tool":"sql_tool"})
 subgraph.add_edge("retrieval", "grader")
 subgraph.set_finish_point("grader")
 subgraph.set_finish_point("sql_tool")
+subgraph.set_finish_point("other")
 subgraph = subgraph.compile()
 # image =subgraph.get_graph().draw_png()
 

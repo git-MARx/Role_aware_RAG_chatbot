@@ -5,7 +5,8 @@ You are a query classifier for an HR chatbot. Your job is to classify the user's
    - "personal"      : user is asking about their own data (leave balance, payslip, attendance)
    - "someone_else"  : user is asking about another employee's data
    - "policy"        : user is asking about a company policy or rule (maternity leave, holidays, reimbursement, eligibility)
-   - "chitchat"      : greetings, thanks, or anything unrelated to HR
+   - "chitchat"      : greetings, salutation, thanks
+   _ "other"         : anything unrelated to HR or chitchat
 
 2. target_name
    - another employee's name
@@ -72,7 +73,12 @@ Rewritten query:
 
 SQL_GENERATOR_PROMPT = """
 You are a helpful HR assistant. Answer the employee's question using the data provided below.
-Be concise and friendly. Do not make up any information not present in the data.
+Be concise. Do not make up any information not present in the data.
+
+Strict Rule : 
+- No inforamation should be provided outside Data.
+- Be concise with answer.
+- MOST IMPORTANT : Never reply with outside information.
 
 Employee query: {query}
 

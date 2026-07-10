@@ -13,7 +13,7 @@ load_dotenv()
 
 
 class Classification(BaseModel):
-    category:    Literal["personal", "policy", "chitchat", "someone_else"]
+    category:    Literal["personal", "policy", "chitchat", "someone_else", "other"]
     data_type:   Optional[Literal["leave_by_type", "total_leave", "payslip"]]
     target_name: Optional[str]
 
@@ -44,6 +44,9 @@ if __name__ == "__main__":
         "What is the maternity leave policy?",
         "What is Rohan's attendance record?",
         "hi",
+        "what is capital of india?",
+        "what is price of my samsung s20 fe",
+        "waht is langchain"
     ]
 
     for query in test_queries:

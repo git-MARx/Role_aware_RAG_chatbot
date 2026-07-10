@@ -55,6 +55,13 @@ def log_request(
         }
         for item in sub_results if item.get("type") == "sql"
     ]
+    other_entries = [
+        {
+            "query":       item.get("query"),
+            "data":        item.get("data"),
+        }
+        for item in sub_results if item.get("type") == "other"
+    ]
     policy_entries = [
         {
             "query":           item.get("query"),
@@ -75,6 +82,7 @@ def log_request(
         "query_type":      query_type,
         "sql_entries":     sql_entries,
         "policy_entries":  policy_entries,
+        "other_entries":   other_entries,
         "final_response":  final_response,
     }))
 
