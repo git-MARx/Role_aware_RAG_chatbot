@@ -1,9 +1,8 @@
-from typing import Literal, Optional
+import json
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import BaseModel
 
 from backend.graph.state import GraphState
 from backend.repository.prompts import DECOMPOSER_SYSTEM_PROMPT
@@ -11,28 +10,27 @@ from config.settings import LLM_MODEL
 
 load_dotenv()
 
-
-class Decomposition(BaseModel):
-    query_type:  Literal["single", "multi"]
-    sub_queries: list[str]
-
-
 llm = ChatGroq(model=LLM_MODEL)
-structured_llm = llm.with_structured_output(Decomposition)
 
 
 def decomposer_node(state: GraphState) -> dict:
+    query = state["rewritten_query"] if state["rewritten_query"] else state["original_query"]
     messages = [
-        SystemMessage(content=DECOMPOSER_SYSTEM_PROMPT),
-        HumanMessage(content=state["rewritten_query"] if state["rewritten_query"] else state["original_query"]),
+        SystemMessage(content=DECOMPOSER_SYSTEM_PROMPT + "\n\nReturn your answer as a JSON object only, no explanation."),
+        HumanMessage(content=query),
     ]
 
-    result: Decomposition = structured_llm.invoke(messages)
+    response = llm.invoke(messages)
+    text = response.content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
 
-    return {
-        "query_type":  result.query_type,
-        "sub_queries": result.sub_queries,
-    }
+    try:
+        parsed = json.loads(text)
+        return {
+            "query_type":  parsed.get("query_type", "single"),
+            "sub_queries": parsed.get("sub_queries", [query]),
+        }
+    except (json.JSONDecodeError, ValueError):
+        return {"query_type": "single", "sub_queries": [query]}
 
 
 if __name__ == "__main__":

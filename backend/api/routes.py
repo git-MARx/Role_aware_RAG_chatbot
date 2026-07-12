@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -6,7 +9,14 @@ from backend.graph.graph import graph
 from backend.graph.state import GraphState
 from config.logger import log_request, log_error
 
+load_dotenv()
+
 router = APIRouter()
+
+_langfuse_handler = None
+if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
+    from langfuse.langchain import CallbackHandler
+    _langfuse_handler = CallbackHandler()
 
 
 class ChatRequest(BaseModel):
@@ -27,11 +37,19 @@ def chat(request: ChatRequest, employee: dict = Depends(get_current_employee)):
         "query_type":      "",
         "sub_queries":     None,
         "sub_results":     [],
+        "pending_action":  None,
         "final_response":  None,
     }
 
     try:
-        result = graph.invoke(state)
+        config = {
+            "callbacks": [_langfuse_handler],
+            "metadata": {
+                "langfuse_user_id":    str(employee["emp_id"]),
+                "langfuse_session_id": employee["thread_id"],
+            },
+        } if _langfuse_handler else {}
+        result = graph.invoke(state, config=config)
 
         log_request(
             emp_id=employee["emp_id"],
