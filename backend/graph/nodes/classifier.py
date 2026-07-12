@@ -1,9 +1,9 @@
-from typing import Literal, Optional
+import json
+from datetime import date
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import BaseModel
 
 from backend.graph.state import SubQueryState
 from backend.repository.prompts import CLASSIFIER_SYSTEM_PROMPT
@@ -11,29 +11,29 @@ from config.settings import LLM_MODEL
 
 load_dotenv()
 
-
-class Classification(BaseModel):
-    category:    Literal["personal", "policy", "chitchat", "someone_else", "other"]
-    data_type:   Optional[Literal["leave_by_type", "total_leave", "payslip"]]
-    target_name: Optional[str]
-
-
 llm = ChatGroq(model=LLM_MODEL)
-structured_llm = llm.with_structured_output(Classification)
 
 
 def classifier_node(state: SubQueryState) -> dict:
     messages = [
-        SystemMessage(content=CLASSIFIER_SYSTEM_PROMPT),
-        HumanMessage(content=state["original_sub_query"]),
+        SystemMessage(content=CLASSIFIER_SYSTEM_PROMPT + "\n\nReturn your answer as a JSON object only, no explanation."),
+        HumanMessage(content=f"Today is {date.today().isoformat()}.\n\nQuery: {state['original_sub_query']}"),
     ]
 
-    result: Classification = structured_llm.invoke(messages)
+    response = llm.invoke(messages)
+    text = response.content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+
+    try:
+        parsed = json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        parsed = {}
 
     return {
-        "category":   result.category,
-        "target_name":result.target_name,
-        "data_type":  result.data_type
+        "category":      parsed.get("category", "other"),
+        "target_name":   parsed.get("target_name"),
+        "data_type":     parsed.get("data_type"),
+        "action_type":   parsed.get("action_type"),
+        "action_params": parsed.get("action_params") or {},
     }
 
 

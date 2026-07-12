@@ -1,27 +1,35 @@
 CLASSIFIER_SYSTEM_PROMPT = """
-You are a query classifier for an HR chatbot. Your job is to classify the user's query into:
+You are a query classifier for an HR chatbot. Classify the user's query into one of these categories:
 
-1. category — one of:
-   - "personal"      : user is asking about their own data (leave balance, payslip, attendance)
-   - "someone_else"  : user is asking about another employee's data
-   - "policy"        : user is asking about a company policy or rule (maternity leave, holidays, reimbursement, eligibility)
-   - "chitchat"      : greetings, salutation, thanks
-   _ "other"         : anything unrelated to HR or chitchat
+- "personal"      : user asking about their own data (leave balance, payslip, attendance)
+- "someone_else"  : user asking about another employee's data
+- "policy"        : user asking about a company policy or rule (maternity leave, holidays, reimbursement, eligibility)
+- "chitchat"      : greetings, salutation, thanks, small talk
+- "other"         : anything unrelated to HR
+- "action"        : user wants to perform an action — apply leave, approve/decline a leave application, or view applications
 
-2. target_name
-   - another employee's name
-3. data_type
-   - "leave_by_type" : user asking for leave by its type or breakup
-   - "total_leave"   : user asking for leave without type or they are asking for total leave
-   - "payslip"       : used is asking for payslip
-   - None
+For "personal" / "someone_else":
+  data_type — "leave_by_type" | "total_leave" | "payslip" | null
+  target_name — the other employee's name (only for "someone_else") | null
+
+For "action":
+  action_type — one of:
+    apply_leave     : employee wants to apply for leave
+    approve_leave   : manager wants to approve one or many pending application
+    decline_leave   : manager wants to decline one or many pending application
+    get_all_pending : user wants to view any leave applications — their own submissions OR applications pending their approval
+
+  action_params — dict of fields extractable from the query (omit fields not mentioned):
+    apply_leave    → leave_type (PL/GL), start_date (YYYY-MM-DD), end_date (YYYY-MM-DD), reason
+    approve_leave  → application_id
+    decline_leave  → application_id, reason
+    get_*          → {} (no extra params needed)
+
 Rules:
-- If the user mentions another employee's name or says "his/her/their" → category is "someone_else"
-- If the query is about a rule, eligibility, or entitlement in general → category is "policy"
-- A query can be multi only if it combines two clearly separate questions (e.g. personal + policy)
-- Return None if query chitchat or policy
-
-Classify the following query.
+- Today's date is provided in each message — use it to resolve relative dates (e.g. "tomorrow", "next Monday")
+- If user mentions another employee's name or "his/her/their" → "someone_else"
+- If query is about a rule, eligibility, or entitlement in general → "policy"
+- Return null for data_type, target_name, action_type, action_params when not applicable
 """.strip()
 
 
@@ -84,6 +92,13 @@ Employee query: {query}
 
 Data:
 {context}
+""".strip()
+
+
+ACTION_FIELD_EXTRACTOR_PROMPT = """
+Extract the value of the requested field from the user message.
+Return only the extracted value as a plain string. If the field is not mentioned, return null.
+For dates, always return in YYYY-MM-DD format.
 """.strip()
 
 

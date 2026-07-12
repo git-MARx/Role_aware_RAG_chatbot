@@ -15,3 +15,16 @@ def save_message(thread_id: str, role: str, content: str) -> None:
     message = json.dumps({"role": role, "content": content})
     redis_client.rpush(key, message)
     redis_client.ltrim(key, -HISTORY_WINDOW, -1)
+
+
+def get_pending_action(thread_id: str) -> dict | None:
+    raw = redis_client.get(f"pending_action:{thread_id}")
+    return json.loads(raw) if raw else None
+
+
+def set_pending_action(thread_id: str, action: dict) -> None:
+    redis_client.set(f"pending_action:{thread_id}", json.dumps(action))
+
+
+def clear_pending_action(thread_id: str) -> None:
+    redis_client.delete(f"pending_action:{thread_id}")

@@ -52,4 +52,4 @@ def login(data: LoginRequest):
         json.dumps(employee_context),
     )
 
-    return {"session_token": session_token}
+    return {"session_token": session_token, "emp_id": row.emp_id, "name": row.name}

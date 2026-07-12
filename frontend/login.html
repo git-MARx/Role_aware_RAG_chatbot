@@ -132,6 +132,8 @@
         }
 
         localStorage.setItem("session_token", data.session_token);
+        localStorage.setItem("emp_id", data.emp_id);
+        localStorage.setItem("name", data.name);
         window.location.href = "/chat";
       } catch (e) {
         showError("Unable to reach the server. Please try again.");

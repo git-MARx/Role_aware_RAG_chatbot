@@ -16,3 +16,4 @@ langchain-google-genai
 langchain-groq
 python-dotenv
 aiofiles
+mcp

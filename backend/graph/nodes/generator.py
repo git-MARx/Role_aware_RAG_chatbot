@@ -11,9 +11,38 @@ load_dotenv()
 
 llm = ChatGroq(model=LLM_MODEL)
 
+def _fmt_applications(rows: list[dict]) -> str:
+    if not rows:
+        return "_No applications found._"
+    headers = ["ID", "Leave Type", "Start", "End", "Days", "Reason", "Applied On", "Status"]
+    keys    = ["id", "leave_type", "start_date", "end_date", "working_days", "reason", "applied_on", "status"]
+    lines   = ["| " + " | ".join(headers) + " |", "| " + " | ".join(["---"] * len(headers)) + " |"]
+    for row in rows:
+        lines.append("| " + " | ".join(str(row.get(k, "—")) for k in keys) + " |")
+    return "\n".join(lines)
+
+
+def _fmt_approvals(rows: list[dict]) -> str:
+    if not rows:
+        return "_No pending approvals._"
+    headers = ["ID", "Employee", "Leave Type", "Start", "End", "Days", "Reason", "Applied On"]
+    keys    = ["id", "employee_name", "leave_type", "start_date", "end_date", "working_days", "reason", "applied_on"]
+    lines   = ["| " + " | ".join(headers) + " |", "| " + " | ".join(["---"] * len(headers)) + " |"]
+    for row in rows:
+        lines.append("| " + " | ".join(str(row.get(k, "—")) for k in keys) + " |")
+    return "\n".join(lines)
+
+
+FIELD_LABELS: dict[str, str] = {
+    "leave_type":     "leave type (PL or GL)",
+    "start_date":     "start date (YYYY-MM-DD)",
+    "end_date":       "end date (YYYY-MM-DD)",
+    "reason":         "reason for leave",
+    "application_id": "application ID",
+}
+
 
 def _build_context(sub_results: list[dict]) -> tuple[str, str]:
-    """Returns (prompt_type, context_string). prompt_type is 'sql' or 'policy'."""
     types = {item["type"] for item in sub_results}
 
     if types == {"policy"}:
@@ -43,17 +72,51 @@ def generator_node(state: GraphState) -> dict:
     sub_results = state.get("sub_results") or []
     thread_id   = state["thread_id"]
 
-    if not sub_results:
-        prompt = query  # chitchat — no data fetched
-    else:
-        prompt_type, context = _build_context(sub_results)
+    action_items     = [r for r in sub_results if r.get("type") == "action"]
+    non_action_items = [r for r in sub_results if r.get("type") != "action"]
+
+    parts = []
+
+    # Action results
+    for item in action_items:
+        if item["status"] == "complete":
+            data = item["data"]
+            if isinstance(data, dict) and "message" in data:
+                parts.append(data["message"])
+            elif isinstance(data, dict) and data.get("success") is False:
+                parts.append(f"Could not complete the request: {data.get('reason', 'unknown error')}")
+            elif isinstance(data, dict) and "my_applications" in data:
+                sections = ["### My Leave Applications\n" + _fmt_applications(data.get("my_applications") or [])]
+                pending = data.get("pending_approvals") or []
+                if pending:
+                    sections.append("### Pending Approvals\n" + _fmt_approvals(pending))
+                parts.append("\n\n".join(sections))
+            elif isinstance(data, list):
+                if not data:
+                    parts.append("_No results found._")
+                elif data and "employee_name" in data[0]:
+                    parts.append(_fmt_approvals(data))
+                else:
+                    parts.append(_fmt_applications(data))
+        else:
+            field = item["missing"][0]
+            parts.append(f"To proceed, I need one more detail — what is the {FIELD_LABELS.get(field, field)}?")
+
+    # Non-action results — use LLM
+    if non_action_items:
+        prompt_type, context = _build_context(non_action_items)
         if prompt_type == "policy":
             prompt = RETRIEVAL_GENERATOR_PROMPT.format(query=query, context=context)
         else:
             prompt = SQL_GENERATOR_PROMPT.format(query=query, context=context)
+        response = llm.invoke([HumanMessage(content=prompt)])
+        parts.append(response.content.strip())
+    elif not action_items:
+        # chitchat
+        response = llm.invoke([HumanMessage(content=query)])
+        parts.append(response.content.strip())
 
-    response = llm.invoke([HumanMessage(content=prompt)])
-    final_response = response.content.strip()
+    final_response = "\n\n".join(parts)
 
     save_message(thread_id, "user", query)
     save_message(thread_id, "assistant", final_response)

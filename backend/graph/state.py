@@ -12,14 +12,20 @@ class SubQueryState(TypedDict):
     emp_id:     int
     role:       str
     manager_id: Optional[int]
+    thread_id:  str
 
     # ── Query lifecycle ────────────────────────────────────────────────────────
-    original_sub_query:  str             # raw user input
+    original_sub_query:  str
 
     # ── Classifier output ─────────────────────────────────────────────────────
-    category:    str            # "personal" | "policy" | "chitchat" | "someone_else"
-    data_type:   Optional[str]  # "leave_by_type" | "total_leave" | "payslip" | None
+    category:    str
+    data_type:   Optional[str]
     target_name: Optional[str]
+    action_type:   Optional[str]
+    action_params: Optional[dict]
+
+    # ── Pending action context (injected from parent when continuing a slot-fill)
+    pending_action: Optional[dict]
 
     # ── Intermediate retrieval (within a branch) ───────────────────────────────
     retrieved_chunks: Optional[list[dict]]
@@ -34,7 +40,7 @@ class GraphState(TypedDict):
     role:       Annotated[str, _last]
     manager_id: Annotated[Optional[int], _last]
     department: str
-    thread_id:  str
+    thread_id:  Annotated[str, _last]
 
     # ── Query lifecycle ────────────────────────────────────────────────────────
     original_query:  str            # raw user input
@@ -46,6 +52,9 @@ class GraphState(TypedDict):
 
     # ── Accumulated results across branches ───────────────────────────────────
     sub_results: Annotated[list[dict], operator.add]
+
+    # ── Pending action slot state (loaded from Redis at start of each turn) ─────
+    pending_action: Annotated[Optional[dict], _last]
 
     # ── Final output ──────────────────────────────────────────────────────────
     final_response: Optional[str]
